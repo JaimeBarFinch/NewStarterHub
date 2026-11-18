@@ -68,7 +68,8 @@
   var vars = BF.contractVars(offer);
   function termsHtml() {
     return '<dl class="terms"><dt>Role</dt><dd>' + esc(offer.job) + '</dd><dt>Start date</dt><dd>' + esc(BF.dateLong(offer.start)) +
-      '</dd><dt>Pay</dt><dd>£' + esc(BF.money(offer.rate)) + ' an hour</dd><dt>Contract</dt><dd>Zero hours, with no guaranteed hours</dd></dl>';
+      '</dd><dt>Pay</dt><dd>£' + esc(BF.money(offer.rate)) + ' an hour</dd>' +
+      (BF.hasSetHours(offer) ? '<dt>Hours</dt><dd>' + esc(String(offer.hrs)) + ' a week</dd>' : '<dt>Contract</dt><dd>Zero hours, with no guaranteed hours</dd>') + '</dl>';
   }
   function signBox(base, tickLabel, heading, nameLabel) {
     var name = val(base + '.name');
@@ -286,7 +287,7 @@
     {
       id: 'contract', title: 'Your contract', next: 'Sign and continue',
       body: function () {
-        var T = BF.CONTRACT;
+        var T = BF.contractFor(offer);
         return '<p class="lead">Read your statement of terms, then sign at the bottom.</p>' + termsHtml() +
           '<div class="doc" style="margin-top:20px"><h2 class="doc-title">' + esc(T.title) + (T.subtitle ? '<br>' + esc(T.subtitle) : '') + '</h2><p>' + UI.fillHtml(T.intro, vars) + '</p>' +
           UI.clausesHtml(T.clauses, vars) + '</div>' +

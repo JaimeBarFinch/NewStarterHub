@@ -242,10 +242,14 @@
 
   /* ---------- 1. Statement of terms and conditions of employment ---------- */
   BF.contractVars = function (o) {
-    return { name: BF.fullName(o), job: o.job, start: BF.dateLong(o.start), rate: BF.money(o.rate) };
+    var v = { name: BF.fullName(o), job: o.job, start: BF.dateLong(o.start), rate: BF.money(o.rate) };
+    if (BF.hasSetHours(o)) v.hours = String(o.hrs);
+    return v;
   };
+  /* which statement of terms an offer uses */
+  BF.contractFor = function (o) { return BF.hasSetHours(o) ? BF.CONTRACT_HOURS : BF.CONTRACT; };
   BF.buildContract = function (o, s) {
-    var T = BF.CONTRACT, vars = BF.contractVars(o), fl = new Flow('Statement of terms and conditions of employment', o.ref);
+    var T = BF.contractFor(o), vars = BF.contractVars(o), fl = new Flow('Statement of terms and conditions of employment', o.ref);
     fl.title(T.title, T.subtitle);
     fl.para(fill(T.intro, vars), { align: 'justify', after: 8 });
     fl.clauses(T.clauses, vars);
@@ -339,7 +343,7 @@
     }
     fl.table([
       row2('Job title', o.job), row2('Rate of pay (£ per hour)', '£' + BF.money(o.rate)),
-      row2('Start date', BF.dateShort(o.start)), row2('Contract hours (per week)', 'Zero hours'),
+      row2('Start date', BF.dateShort(o.start)), row2('Contract hours (per week)', BF.hasSetHours(o) ? String(o.hrs) : 'Zero hours'),
       [lab('Employment type', 150), pick([['full', 'Full time'], ['part', 'Part time'], ['temp', 'Temporary']], o.type)],
       [lab('Location', 150), pick([['bar', 'Bar Finch'], ['hq', 'Office HQ']], 'bar')],
       row2('Right to work documents checked by', ''), row2('Date of right to work check', '')

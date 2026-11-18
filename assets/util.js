@@ -98,6 +98,7 @@
   BF.refCode = function (o) {
     var co = o.co || {};
     var basis = [o.fn, o.sn, o.job, o.start, o.rate, o.type || '', co.name, co.pos, co.date].join('|');
+    if (BF.hasSetHours(o)) basis += '|hours|' + o.hrs;
     var h = cyrb53(basis, 7);
     var A = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ', out = '';
     for (var p = 0; p < 2; p++) {
@@ -135,6 +136,8 @@
     var n = parseFloat(String(v).replace(/[£,\s]/g, ''));
     return isFinite(n) ? n.toFixed(2) : String(v);
   };
+  /* An offer is either zero hours (the default) or has set weekly hours typed in on the setup page. */
+  BF.hasSetHours = function (o) { return !!o && o.ct === 'hours' && !!o.hrs; };
   BF.fullName = function (o) { return (String(o.fn || '').trim() + ' ' + String(o.sn || '').trim()).trim(); };
   BF.typeLabel = function (t) { return { full: 'Full time', part: 'Part time', temp: 'Temporary' }[t] || ''; };
 
