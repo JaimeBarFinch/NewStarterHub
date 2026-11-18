@@ -9,7 +9,7 @@
   function read(key, fallback) { try { var t = localStorage.getItem(key); return t ? JSON.parse(t) : fallback; } catch (e) { return fallback; } }
   function write(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); return true; } catch (e) { return false; } }
 
-  var D = { fn: '', sn: '', job: '', start: '', rate: '', hrs: '', type: '', _d: {} };     // this starter's offer
+  var D = { fn: '', sn: '', job: '', start: '', rate: '', type: '', _d: {} };              // this starter's offer
   var C = read(SET_KEY, null) || { name: '', pos: '', sig: '', hr: '', post: '' };          // saved on this device
   var LOG = read(LOG_KEY, []);
   var K = BF.parseSetupKey(read(KEY_KEY, ''));          // the setup key, once entered in this browser
@@ -135,8 +135,8 @@
       UI.text(V, errs, 'd.job', 'Job title', { hint: 'As it should read in “You are employed as …”' }) +
       UI.date(V, errs, 'd.start', 'Start date', { hint: 'For example 26 10 2026' }) +
       UI.text(V, errs, 'd.rate', 'Hourly rate (£)', { cls: 'w-s', hint: 'For example 13.50', attrs: { inputmode: 'decimal' } }) +
-      UI.text(V, errs, 'd.hrs', 'Hours a week', { cls: 'w-s', hint: 'For example 45', attrs: { inputmode: 'decimal' } }) +
-      '</div>' + UI.radios(V, errs, 'd.type', 'Employment type', [['full', 'Full time'], ['part', 'Part time'], ['temp', 'Temporary']], { inline: true, re: false }) + '</div>';
+      '</div>' + UI.radios(V, errs, 'd.type', 'Employment type on the New Starter Form', [['', 'Leave blank'], ['full', 'Full time'], ['part', 'Part time'], ['temp', 'Temporary']],
+        { inline: true, re: false, hint: 'The contract is zero hours, so no weekly hours are set. Tick a box only if you want one ticked on the form.' }) + '</div>';
 
     h += '<div class="sheet"><h2 style="margin-top:0">Signing for the company</h2><p class="small">Saved in this browser, so you only set it up once. It is added to the contract when you create a link.</p><div class="grid2">' +
       UI.text(V, errs, 'c.name', 'Name of the person signing') + UI.text(V, errs, 'c.pos', 'Their position') + '</div>' +
@@ -164,10 +164,10 @@
     h += '<div class="sheet" style="margin-top:20px"><h2 style="margin-top:0">Links you have created</h2>';
     if (!LOG.length) h += '<p class="small">Nothing yet. Links you create in this browser are listed here so you can copy them again and check returned forms against their reference.</p>';
     else {
-      h += '<div class="log-wrap"><table class="log"><thead><tr><th>Created</th><th>Starter</th><th>Role</th><th>Start</th><th>Pay and hours</th><th>Reference</th><th></th></tr></thead><tbody>';
+      h += '<div class="log-wrap"><table class="log"><thead><tr><th>Created</th><th>Starter</th><th>Role</th><th>Start</th><th>Hourly rate</th><th>Reference</th><th></th></tr></thead><tbody>';
       LOG.forEach(function (r, i) {
         h += '<tr><td>' + esc(BF.dateShort(r.at)) + '</td><td>' + esc(r.fn + ' ' + r.sn) + '</td><td>' + esc(r.job) + '</td><td>' + esc(BF.dateShort(r.start)) +
-          '</td><td>£' + esc(BF.money(r.rate)) + ', ' + esc(String(r.hrs)) + ' hrs</td><td>' + esc(r.ref) + '</td>' +
+          '</td><td>£' + esc(BF.money(r.rate)) + '</td><td>' + esc(r.ref) + '</td>' +
           '<td><button type="button" class="btn-link" data-act="logcopy" data-i="' + i + '">Copy link</button> <button type="button" class="btn-link" data-act="logdel" data-i="' + i + '">Remove</button></td></tr>';
       });
       h += '</tbody></table></div><div class="actions"><button type="button" class="btn-plain" data-act="csv">Download this list</button></div>';
@@ -196,9 +196,6 @@
     if (!D.start) e['d.start'] = 'Enter the start date using numbers, for example 26 10 2026';
     var rate = parseFloat(v(D, 'rate').replace(/[£,\s]/g, ''));
     if (!(rate > 0 && rate < 1000)) e['d.rate'] = 'Enter the hourly rate in pounds, for example 13.50'; else D.rate = rate.toFixed(2);
-    var hrs = parseFloat(v(D, 'hrs'));
-    if (!(hrs > 0 && hrs <= 80)) e['d.hrs'] = 'Enter the weekly hours, for example 45'; else D.hrs = String(hrs);
-    if (!D.type) e['d.type'] = 'Choose the employment type';
     need(C, 'name', 'c.name', 'Enter the name of the person signing for the company'); need(C, 'pos', 'c.pos', 'Enter their position');
     if (!BF.unpackSig(C.sig)) e['c.sig'] = 'Draw the signature';
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v(C, 'hr'))) e['c.hr'] = 'Enter the email address completed forms should be sent to';
@@ -215,7 +212,7 @@
       return;
     }
     var offer = {
-      fn: D.fn.trim(), sn: D.sn.trim(), job: D.job.trim(), start: D.start, rate: D.rate, hrs: D.hrs, type: D.type,
+      fn: D.fn.trim(), sn: D.sn.trim(), job: D.job.trim(), start: D.start, rate: D.rate, type: D.type || '',
       co: { name: C.name.trim(), pos: C.pos.trim(), sig: C.sig, date: BF.today() }, hr: C.hr.trim()
     };
     if (C.post && C.post.trim()) offer.post = C.post.trim();
@@ -224,7 +221,7 @@
       var link = linkBase() + payload + '.' + sig;
       offer.ref = ref;
       result = { offer: offer, ref: ref, link: link };
-      LOG.unshift({ ref: ref, at: BF.nowLocal(), fn: offer.fn, sn: offer.sn, job: offer.job, start: offer.start, rate: offer.rate, hrs: offer.hrs, type: offer.type, link: link });
+      LOG.unshift({ ref: ref, at: BF.nowLocal(), fn: offer.fn, sn: offer.sn, job: offer.job, start: offer.start, rate: offer.rate, type: offer.type, link: link });
       if (!write(LOG_KEY, LOG)) UI.toast('This browser would not save the list. Keep a note of the reference.');
       render();
       var r = document.getElementById('result');
@@ -262,8 +259,8 @@
     else if (act === 'logcopy') UI.copy(LOG[i].link, 'Link copied');
     else if (act === 'logdel') { LOG.splice(i, 1); write(LOG_KEY, LOG); render(); }
     else if (act === 'csv') {
-      var rows = [['Created', 'First name(s)', 'Surname', 'Job title', 'Start date', 'Hourly rate', 'Hours a week', 'Employment type', 'Reference']];
-      LOG.forEach(function (r) { rows.push([r.at.replace('T', ' '), r.fn, r.sn, r.job, r.start, r.rate, r.hrs, BF.typeLabel(r.type), r.ref]); });
+      var rows = [['Created', 'First name(s)', 'Surname', 'Job title', 'Start date', 'Hourly rate', 'Employment type', 'Reference']];
+      LOG.forEach(function (r) { rows.push([r.at.replace('T', ' '), r.fn, r.sn, r.job, r.start, r.rate, BF.typeLabel(r.type), r.ref]); });
       var csv = rows.map(function (r) { return r.map(function (c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(','); }).join('\r\n');
       UI.download('Bar-Finch-starter-links.csv', BF.utf8('﻿' + csv), 'text/csv');
     }

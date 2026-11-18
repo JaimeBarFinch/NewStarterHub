@@ -42,7 +42,7 @@
     if (bits[0] !== 'v1' || !bits[1]) return null;
     try {
       var o = JSON.parse(BF.fromUtf8(unb64url(bits[1])));
-      if (!o || typeof o !== 'object' || !o.fn || !o.sn || !o.job || !o.start || !o.rate || !o.hrs) return null;
+      if (!o || typeof o !== 'object' || !o.fn || !o.sn || !o.job || !o.start || !o.rate) return null;
       return { offer: o, payload: 'v1.' + bits[1], sig: bits[2] || '' };
     } catch (e) { return null; }
   };
@@ -97,7 +97,7 @@
   }
   BF.refCode = function (o) {
     var co = o.co || {};
-    var basis = [o.fn, o.sn, o.job, o.start, o.rate, o.hrs, o.type, co.name, co.pos, co.date].join('|');
+    var basis = [o.fn, o.sn, o.job, o.start, o.rate, o.type || '', co.name, co.pos, co.date].join('|');
     var h = cyrb53(basis, 7);
     var A = '23456789ABCDEFGHJKLMNPQRSTUVWXYZ', out = '';
     for (var p = 0; p < 2; p++) {

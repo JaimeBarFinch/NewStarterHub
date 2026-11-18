@@ -73,9 +73,11 @@
   };
   Flow.prototype.need = function (h) { if (this.y + h > M.BOTTOM) this.newPage(); };
   Flow.prototype.gap = function (h) { if (!this.fresh) this.y += h; };
-  Flow.prototype.title = function (t) {
+  Flow.prototype.title = function (t, sub) {
     this.pg.text(t, M.L, base(this.y, 14, 18), this.F.B, 14);
-    this.y += 18 + 10; this.fresh = false;
+    this.y += 18;
+    if (sub) { this.y += 3; this.pg.text(sub, M.L, base(this.y, 14, 18), this.F.B, 14); this.y += 18; }
+    this.y += 10; this.fresh = false;
   };
   Flow.prototype.para = function (text, o) {
     o = o || {};
@@ -240,11 +242,11 @@
 
   /* ---------- 1. Statement of terms and conditions of employment ---------- */
   BF.contractVars = function (o) {
-    return { name: BF.fullName(o), job: o.job, start: BF.dateLong(o.start), hours: String(o.hrs), rate: BF.money(o.rate) };
+    return { name: BF.fullName(o), job: o.job, start: BF.dateLong(o.start), rate: BF.money(o.rate) };
   };
   BF.buildContract = function (o, s) {
     var T = BF.CONTRACT, vars = BF.contractVars(o), fl = new Flow('Statement of terms and conditions of employment', o.ref);
-    fl.title(T.title);
+    fl.title(T.title, T.subtitle);
     fl.para(fill(T.intro, vars), { align: 'justify', after: 8 });
     fl.clauses(T.clauses, vars);
     fl.need(150);
@@ -337,7 +339,7 @@
     }
     fl.table([
       row2('Job title', o.job), row2('Rate of pay (£ per hour)', '£' + BF.money(o.rate)),
-      row2('Start date', BF.dateShort(o.start)), row2('Contract hours (per week)', String(o.hrs)),
+      row2('Start date', BF.dateShort(o.start)), row2('Contract hours (per week)', 'Zero hours'),
       [lab('Employment type', 150), pick([['full', 'Full time'], ['part', 'Part time'], ['temp', 'Temporary']], o.type)],
       [lab('Location', 150), pick([['bar', 'Bar Finch'], ['hq', 'Office HQ']], 'bar')],
       row2('Right to work documents checked by', ''), row2('Date of right to work check', '')

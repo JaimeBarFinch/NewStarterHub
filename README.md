@@ -4,7 +4,7 @@ A small website for onboarding new starters. You fill in the offer, it gives you
 starter completes and signs their paperwork on their own phone or computer. The finished forms are
 PDFs that match the originals:
 
-1. Statement of terms and conditions of employment (the contract)
+1. Statement of terms and conditions of employment: zero-hours contract
 2. New Starter Form
 3. HMRC starter checklist (the official form, filled in; only when it is needed)
 4. Working time opt-out agreement (only if the starter chooses to opt out)
@@ -14,7 +14,7 @@ PDFs that match the originals:
 
 Starter links are signed. The starter page only opens links that were made with your **setup key**,
 and refuses any link that was made without it or changed afterwards, so nobody else can create a
-Bar Finch link and nobody can alter the pay, hours or delivery address in one.
+Bar Finch link and nobody can alter the pay or delivery address in one.
 
 The setup key is the line beginning `BFKEY1` in the separate `SETUP-KEY.txt` file. Keep it private
 and never upload it to GitHub. The setup page asks for it the first time you use it in a browser.
@@ -42,14 +42,14 @@ This is the same process as the Finch-Food app.
 ## Creating a link
 
 1. Open the setup page. The first time in a browser, paste in your setup key.
-2. Fill in the starter's name, job title, start date, hourly rate, weekly hours and employment type.
+2. Fill in the starter's name, job title, start date and hourly rate. The contract is zero hours, so
+   no weekly hours are asked for or shown anywhere.
 3. The first time, add who signs for the company, draw their signature, and enter the email address
    completed forms should go to. These are saved in that browser, so use the same browser each time.
 4. Select **Create link**, then copy the link (or the ready-made message) and send it to the starter.
 5. **Download the contract as issued** gives you a copy of exactly what was offered.
 
-Each link has a reference such as `Y8Z7-JALV`, worked out from the name, role, start date, pay and
-hours. It is printed at the foot of every page the starter sends back, so you can match a returned
+Each link has a reference such as `Y8Z7-JALV`, worked out from the name, role, start date and pay. It is printed at the foot of every page the starter sends back, so you can match a returned
 pack to its entry under **Links you have created**.
 
 ## What the starter does
@@ -63,7 +63,7 @@ Signing is done by ticking a box and typing their full name. Each signature show
 
 ## What is stored where
 
-- The offer (name, role, pay, hours, your signature) travels inside the link itself. Anyone with the
+- The offer (name, role, pay, your signature) travels inside the link itself. Anyone with the
   link can open it, so send it only to the starter.
 - The starter's answers stay in their own browser tab until they finish. Closing the tab removes
   them. Nothing is sent to GitHub.
@@ -112,5 +112,5 @@ website's public files. Because links are signed, it cannot be swapped for a dif
 ## Changing the wording or the logo
 
 The wording lives in `assets/templates.js` and the logo in `assets/logo.js`. Small wording changes
-can be made there directly. For anything larger, such as a salaried contract, a new clause or a new
+can be made there directly. For anything larger, such as a contract with fixed hours, a new clause or a new
 form, the document layouts in `assets/docs.js` need changing too.
