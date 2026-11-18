@@ -68,8 +68,12 @@ Signing is done by ticking a box and typing their full name. Each signature show
 
 - The offer (name, role, pay, contract type, your signature) travels inside the link itself. Anyone with the
   link can open it, so send it only to the starter.
-- The starter's answers stay in their own browser tab until they finish. Closing the tab removes
-  them. Nothing is sent to GitHub.
+- The starter's answers stay in their own browser tab while they fill the forms in. Once they have
+  downloaded their forms and sent them, the page deletes its copy of their answers automatically.
+  Closing the tab also removes them. Nothing is sent to GitHub.
+- The page counts the forms as sent when the phone's share sheet finishes, when automatic delivery
+  is confirmed, or when the starter selects **I have sent my forms**. It cannot see inside their
+  email app, and it does not touch the files they downloaded or the email itself.
 - The setup page keeps your setup key, signature, email address and list of links in your browser
   only.
 - The website's files are public, including the wording of the contract and confidentiality

@@ -415,13 +415,48 @@
     sendState = 'sending'; render();
     fetch(offer.post, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(payload()) })
       .then(function (res) { sendState = res.ok ? 'ok' : 'failed'; }, function () { sendState = 'unknown'; })
-      .then(function () { S._sent = sendState; save(); render(); });
+      .then(function () { S._sent = sendState; save(); if (!finishIfDone()) render(); });
   }
   function shareFiles() {
     return pack.map(function (f) { return new File([f.bytes], f.name, { type: 'application/pdf' }); });
   }
   function canShare() {
     try { return !!(navigator.canShare && pack && navigator.canShare({ files: shareFiles() })); } catch (e) { return false; }
+  }
+  /* ---------- finishing: once the forms are downloaded and sent, this device's copy of the answers is deleted ---------- */
+  function isSent() { return sendState === 'ok' || !!S._mailed; }
+  function todoList() {
+    var todo = ['Bring your original right to work document' + ((S.rtw.kind === 'evisa' || S.rtw.kind === 'euss') ? ', or have your share code ready' : '') + ', before your first shift.'];
+    if (S.tax.p45 === 'yes') todo.push('Bring parts 2 and 3 of your P45.');
+    if (S.sig.nda.mode !== 'witness') todo.push('You will sign the confidentiality agreement in person with a witness.');
+    return '<h2>Before your first shift</h2><ul>' + todo.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>';
+  }
+  function wipe() {
+    try { sessionStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
+    S = blank(); pack = null; errs = {}; packError = '';
+  }
+  function markDownloaded(i) {
+    if (i === 'all') S._dl = true;
+    else {
+      S._got = S._got || {};
+      S._got[i] = true;
+      if (pack.every(function (f, k) { return S._got[k]; })) S._dl = true;
+    }
+    save();
+  }
+  /* true when everything is finished and the details have just been deleted */
+  function finishIfDone() {
+    if (!pack || !S._dl || !isSent()) return false;
+    var auto = sendState === 'ok', todo = todoList(), ref = offer.ref;
+    wipe();
+    document.title = 'All done | Bar Finch new starter forms';
+    app.innerHTML = logo + '<div class="sheet"><h1 tabindex="-1" id="top">All done</h1>' +
+      '<p class="lead">Your forms have been downloaded and sent, so your details have been deleted from this device.</p>' +
+      (auto ? '' : '<div class="note"><p>If your email did not send, attach the forms you downloaded and email them to ' + (HR ? '<strong>' + esc(HR) + '</strong>' : 'your manager') + '.</p></div>') +
+      todo + '<p class="small">Reference ' + esc(ref) + '. You can close this page.</p></div>';
+    window.scrollTo(0, 0);
+    var top = document.getElementById('top'); if (top) top.focus({ preventScroll: true });
+    return true;
   }
   function doneBody() {
     if (packError) return '<div class="note bad"><p><strong>Your forms could not be created on this device.</strong> Nothing has been lost. Try again, or open your link in a different browser.</p><p class="small">' + esc(packError) + '</p></div>' +
@@ -434,6 +469,7 @@
       else if (sendState) h += '<div class="note warn"><p><strong>We could not confirm that your forms reached Bar Finch.</strong> Please also send them yourself using the steps below.</p>' +
         '<p><button type="button" class="btn-link" data-act="resend">Try sending again</button></p></div>';
     }
+    if (isSent() && !S._dl) h += '<div class="note warn" id="need-dl"><p><strong>One thing left: download your forms.</strong> Once you have your copy, your details are deleted from this device.</p></div>';
     h += '<p class="lead">' + (sendState === 'ok' ? 'Keep these for your records.' : 'Download your forms, then send them to Bar Finch.') + '</p><ul class="files">';
     pack.forEach(function (f, i) {
       h += '<li><span class="fname">' + esc(f.label) + (f.note ? '<span class="fnote">' + esc(f.note) + '</span>' : '') + '</span>' +
@@ -446,13 +482,12 @@
         '<div class="actions"><button type="button" class="btn-primary" data-act="share">Send my forms</button></div><p class="small" style="margin-top:10px">Choose your email app, then check the address before you send.</p>';
       else h += '<p>Download all your forms, then email the downloaded file to ' + (HR ? '<strong>' + esc(HR) + '</strong>' : 'your manager') + '.</p>' +
         (HR ? '<div class="actions"><a class="btn btn-plain" href="mailto:' + esc(HR) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent('My new starter forms are attached.\n\n' + name) + '">Start an email to Bar Finch</a></div><p class="small" style="margin-top:10px">Remember to attach the downloaded file.</p>' : '');
+      h += '<div class="actions"><button type="button" class="btn-plain" data-act="sent">I have sent my forms</button></div>';
     }
-    var todo = ['Bring your original right to work document' + ((S.rtw.kind === 'evisa' || S.rtw.kind === 'euss') ? ', or have your share code ready' : '') + ', before your first shift.'];
-    if (S.tax.p45 === 'yes') todo.push('Bring parts 2 and 3 of your P45.');
-    if (S.sig.nda.mode !== 'witness') todo.push('You will sign the confidentiality agreement in person with a witness.');
-    h += '<h2>Before your first shift</h2><ul>' + todo.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul>' +
-      '<p class="small">Reference ' + esc(offer.ref) + '. Your answers are still held in this browser tab. Closing the tab removes them, or you can remove them now.</p>' +
-      '<div class="actions"><button type="button" class="btn-plain" data-act="back">Go back and change something</button><button type="button" class="btn-plain" data-act="clear">Remove my details from this device</button></div>';
+    h += '<div class="note" style="margin-top:22px"><p>When you have downloaded your forms and sent them, your details are deleted from this device automatically.</p></div>' +
+      todoList() +
+      '<p class="small">Reference ' + esc(offer.ref) + '. Until then your answers are held in this browser tab only. Closing the tab also removes them.</p>' +
+      '<div class="actions"><button type="button" class="btn-plain" data-act="back">Go back and change something</button><button type="button" class="btn-plain" data-act="clear">Delete my details now</button></div>';
     return h;
   }
 
@@ -513,21 +548,29 @@
     var act = b.getAttribute('data-act');
     if (act === 'next') next();
     else if (act === 'back') {
-      if (ix === LAST) { S._sent = ''; sendState = ''; }   // anything changed after this point is sent again
+      if (ix === LAST) { S._sent = ''; sendState = ''; delete S._dl; delete S._got; delete S._mailed; }   // changed forms are downloaded and sent again
       go(Math.max(0, ix - 1));
     }
     else if (act === 'goto') go(+b.getAttribute('data-step'));
     else if (act === 'retry') go(LAST);
-    else if (act === 'file') { var f = pack[+b.getAttribute('data-i')]; UI.download(f.name, f.bytes); }
-    else if (act === 'zip') UI.download(BF.packName(offer, S) + '.zip', BF.zip(pack), 'application/zip');
+    else if (act === 'file') {
+      var fi = +b.getAttribute('data-i'), f = pack[fi];
+      UI.download(f.name, f.bytes); markDownloaded(fi); finishIfDone();
+    }
+    else if (act === 'zip') {
+      UI.download(BF.packName(offer, S) + '.zip', BF.zip(pack), 'application/zip'); markDownloaded('all'); finishIfDone();
+    }
+    else if (act === 'sent') {
+      S._mailed = true; save();
+      if (!finishIfDone()) { render(); var nd = document.getElementById('need-dl'); if (nd) nd.scrollIntoView({ block: 'center' }); }
+    }
     else if (act === 'resend') send();
     else if (act === 'share') {
       navigator.share({ files: shareFiles(), title: 'New starter forms: ' + S.fn + ' ' + S.sn, text: 'New starter forms for ' + S.fn + ' ' + S.sn + ' (ref ' + offer.ref + ').' + (HR ? ' Send to ' + HR : '') })
-        .catch(function () { /* closed without sending */ });
+        .then(function () { S._mailed = true; save(); if (!finishIfDone()) render(); }, function () { /* closed without sending */ });
     } else if (act === 'clear') {
-      try { sessionStorage.removeItem(KEY); } catch (e) { /* nothing stored */ }
-      pack = null;
-      app.innerHTML = logo + '<div class="sheet"><h1>Your details have been removed from this device</h1><p>You can close this page. If you still need to send your forms, open your link again.</p></div>';
+      wipe();
+      app.innerHTML = logo + '<div class="sheet"><h1>Your details have been deleted from this device</h1><p>You can close this page. If you still need to send your forms, open your link again.</p></div>';
     }
   });
 

@@ -161,7 +161,8 @@
     var a = document.createElement('a');
     a.href = url; a.download = name; a.style.display = 'none';
     document.body.appendChild(a); a.click();
-    setTimeout(function () { document.body.removeChild(a); URL.revokeObjectURL(url); }, 4000);
+    // keep the file available for five minutes: phones ask "Download?" first, and the page may be cleared in the meantime
+    setTimeout(function () { if (a.parentNode) a.parentNode.removeChild(a); URL.revokeObjectURL(url); }, 300000);
   };
 
   /* on-screen version of a clause document (contract, opt-out, NDA) */
